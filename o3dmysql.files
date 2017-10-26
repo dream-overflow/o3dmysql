@@ -1,0 +1,7 @@
+include/o3d/mysql/mysqldb.h
+src/mysqldb.cpp
+test/main.cpp
+include/o3d/mysql/mysqlexception.h
+include/o3d/mysql/mysql.h
+include/o3d/mysql/mysqldbvariable.h
+src/mysqldbvariable.cpp
