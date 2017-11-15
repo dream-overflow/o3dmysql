@@ -1,7 +1,7 @@
 /**
  * @file mysqldb.h
  * @brief 
- * @author Frederic SCHERMA (frederic.scherma@gmail.com)
+ * @author Frederic SCHERMA (frederic.scherma@dreamoverflow.org)
  * @date 2013-12-02
  * @copyright Copyright (c) 2001-2017 Dream Overflow. All rights reserved.
  * @details 
@@ -23,7 +23,7 @@ namespace mysql {
 
 /**
  * @brief MySql
- * @author Frederic SCHERMA (frederic.scherma@gmail.com)
+ * @author Frederic SCHERMA (frederic.scherma@dreamoverflow.org)
  * @date 2013-12-02
  */
 class O3D_API MySql
@@ -39,7 +39,7 @@ public:
 
 /**
  * @brief MySqlDb database client.
- * @author Frederic SCHERMA (frederic.scherma@gmail.com)
+ * @author Frederic SCHERMA (frederic.scherma@dreamoverflow.org)
  * @date 2007-11-08
  */
 class O3D_MYSQL_API MySqlDb : public Database
@@ -76,7 +76,7 @@ protected:
 
 /**
  * @brief MySqlQuery database prepared query. Can't be deleted outside of the MySqlDb.
- * @author Frederic SCHERMA (frederic.scherma@gmail.com)
+ * @author Frederic SCHERMA (frederic.scherma@dreamoverflow.org)
  * @date 2007-11-08
  */
 class O3D_MYSQL_API MySqlQuery : public DbQuery
