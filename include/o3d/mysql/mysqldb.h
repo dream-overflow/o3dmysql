@@ -13,7 +13,8 @@
 #include "mysql.h"
 
 #include <o3d/core/database.h>
-#include <o3d/core/objects.h>
+#include <o3d/core/date.h>
+#include <o3d/core/datetime.h>
 #include <o3d/core/memorydbg.h>
 
 #include <mysql/mysql.h>
@@ -109,8 +110,11 @@ public:
     //! Set an input variable as CString.
     virtual void setCString(UInt32 attr, const CString &v);
 
-    //! Set an input variable as Timestamp.
-    virtual void setTimestamp(UInt32 attr, const Date &date);
+    //! Set an input variable as Date.
+    virtual void setDate(UInt32 attr, const Date &date);
+
+	//! Set an input variable as Timestamp.
+    virtual void setTimestamp(UInt32 attr, const DateTime &date);
 
     //! Get an output attribute id by its name.
     virtual UInt32 getOutAttr(const CString &name);

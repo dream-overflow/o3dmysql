@@ -111,7 +111,7 @@ void MySqlDb::pingConnection()
 // Instanciate a new DbQuery object
 DbQuery* MySqlDb::newDbQuery(const String &name, const CString &query)
 {
-    return new MySqlQuery(m_pDB,name,query);
+    return new MySqlQuery(m_pDB, name, query);
 }
 
 // Virtual destructor
@@ -343,7 +343,7 @@ void MySqlQuery::setCString(UInt32 attr, const CString &v)
     m_needBind = True;
 }
 
-void MySqlQuery::setTimestamp(UInt32 attr, const Date &v)
+void MySqlQuery::setDate(UInt32 attr, const Date &v)
 {
     if (attr >= m_numParam)
         O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
@@ -352,6 +352,47 @@ void MySqlQuery::setTimestamp(UInt32 attr, const Date &v)
         deletePtr(m_inputs[attr]);
 
     m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_DATE, DbVariable::TIMESTAMP, (UInt8*)&v);
+    DbVariable &var = *m_inputs[attr];
+
+    MYSQL_TIME *mysqlTime = (MYSQL_TIME*)var.getObjectPtr();
+    memset(mysqlTime, 0, sizeof(MYSQL_TIME));
+
+    mysqlTime->day = v.mday + 1;
+    mysqlTime->hour = 0;
+    mysqlTime->minute = 0;
+    mysqlTime->month = v.month + 1;
+    mysqlTime->second = 0;
+    mysqlTime->time_type = MYSQL_TIMESTAMP_DATETIME;
+    mysqlTime->year = v.year;
+
+    enum_field_types dbtype = (enum_field_types)0;
+    unsigned long dbsize = 0;
+
+    mapType(var.getType(), dbtype, dbsize);
+
+    memset(&m_param_bind[attr], 0, sizeof(MYSQL_BIND));
+
+    m_param_bind[attr].buffer_type = (enum_field_types)dbtype;
+    m_param_bind[attr].buffer = (void*)var.getObjectPtr();
+    m_param_bind[attr].buffer_length = dbsize;
+
+    m_param_bind[attr].is_null = 0;
+
+    var.setLength(dbsize);
+    m_param_bind[attr].length = (unsigned long*)var.getLengthPtr();
+
+    m_needBind = True;
+}
+
+void MySqlQuery::setTimestamp(UInt32 attr, const DateTime &v)
+{
+    if (attr >= m_numParam)
+        O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+
+    if (m_inputs[attr])
+        deletePtr(m_inputs[attr]);
+
+    m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_DATETIME, DbVariable::TIMESTAMP, (UInt8*)&v);
     DbVariable &var = *m_inputs[attr];
 
     MYSQL_TIME *mysqlTime = (MYSQL_TIME*)var.getObjectPtr();
@@ -653,11 +694,20 @@ Bool MySqlQuery::fetch()
                 Date *date = (Date*)var.getObject();
                 MYSQL_TIME *mysqlTime = (MYSQL_TIME*)var.getObjectPtr();
                 date->day = Day(mysqlTime->day - 1);
-                date->hour = mysqlTime->hour;
-                date->minute = mysqlTime->minute;
                 date->month = Month(mysqlTime->month - 1);
-                date->second = mysqlTime->second;
                 date->year = mysqlTime->year;
+            }
+            // datetime
+            else if (var.getIntType() == DbVariable::IT_DATETIME)
+            {
+                DateTime *datetime = (DateTime*)var.getObject();
+                MYSQL_TIME *mysqlTime = (MYSQL_TIME*)var.getObjectPtr();
+                datetime->day = Day(mysqlTime->day - 1);
+                datetime->hour = mysqlTime->hour;
+                datetime->minute = mysqlTime->minute;
+                datetime->month = Month(mysqlTime->month - 1);
+                datetime->second = mysqlTime->second;
+                datetime->year = mysqlTime->year;
             }
 		}
 
