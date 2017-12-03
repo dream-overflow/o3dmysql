@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 2.6)
-project (O3D_NET)
+cmake_minimum_required (VERSION 2.8)
+project (O3D_MYSQL)
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -109,4 +109,3 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
 add_subdirectory(src)
 add_subdirectory(test)
-

@@ -1,3 +1,4 @@
+CMakeLists.txt
 include/o3d/mysql/mysqldb.h
 src/mysqldb.cpp
 test/main.cpp
