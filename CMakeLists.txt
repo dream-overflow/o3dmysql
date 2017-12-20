@@ -30,43 +30,26 @@ else()
 	set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG -DO3D_DISABLE_RAM_MEMORY_MANAGER -DO3D_DISABLE_FAST_MEMORY_MANAGER -DO3D_DISABLE_GPU_MEMORY_MANAGER -DO3D_DISABLE_SPU_MEMORY_MANAGER")
 	set(CMAKE_C_FLAGS_DEBUG            "-O0 -ggdb -D_DEBUG -DO3D_DISABLE_RAM_MEMORY_MANAGER -DO3D_DISABLE_FAST_MEMORY_MANAGER")
 	set(CMAKE_C_FLAGS_DEBUGFULL        "-O0 -ggbd -D_DEBUG")
+
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Android")
+        set(CMAKE_CXX_FLAGS_RELEASE    "-g0 -Os -DNDEBUG -ffunction-sections")
+    endif()
+
+    # linker options
+    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE  "-Wl,--gc-sections")
+    set(CMAKE_MODULE_LINKER_FLAGS_RELEASE  "-Wl,--gc-sections")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE  "-Wl,--gc-sections")		
 endif()
 
 #----------------------------------------------------------
 # externals libraries
 #----------------------------------------------------------
 
-include(FindOpenGL)
+include(dreamoverflow)
 
-# Objective3dConfig.h
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	if(MINGW)
-		set(LIB_PATH $ENV{CROSSROAD_PREFIX})
-	else()
-		set(LIB_PATH $ENV{LIB_PATH})
-	endif()
-else()
-	set(LIB_PATH $ENV{PREFIX})
-endif()
+set(CMAKE_FIND_ROOT_PATH ${CMAKE_FIND_ROOT_PATH} $ENV{PREFIX})
 
-if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-	include_directories(${LIB_PATH}/lib/objective3d-dbg)
-	set(LIB_EXT "-dbg")
-elseif(${CMAKE_BUILD_TYPE} MATCHES "RelWithDebInfo")
-	include_directories(${LIB_PATH}/lib/objective3d-odbg)
-	set(LIB_EXT "-odbg")
-elseif(${CMAKE_BUILD_TYPE} MATCHES "Release")
-	include_directories(${LIB_PATH}/lib/objective3d)
-	set(LIB_EXT "")
-endif()
-
-if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-	include_directories(${LIB_PATH}/lib/objective3d-dbg)
-elseif(${CMAKE_BUILD_TYPE} MATCHES "RelWithDebInfo")
-	include_directories(${LIB_PATH}/lib/objective3d-odbg)
-elseif(${CMAKE_BUILD_TYPE} MATCHES "Release")
-	include_directories(${LIB_PATH}/lib/objective3d)
-endif()
+find_package(Objective3D REQUIRED)
 
 # Windows MSVC
 if(NOT MINGW AND ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -88,6 +71,22 @@ include_directories("${PROJECT_SOURCE_DIR}/include")
 #----------------------------------------------------------
 # options
 #----------------------------------------------------------
+
+IF(${O3D_USE_SSE2})
+	message("-- SIMD/SSE2 support enabled")
+ENDIF(${O3D_USE_SSE2})
+
+include_directories(${OBJECTIVE3D_INCLUDE_DIR})
+include_directories(${OBJECTIVE3D_INCLUDE_DIR_objective3dconfig})
+
+link_directories(${OBJECTIVE3D_LIBRARY_DIR})
+
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14")
+    if (O3D_USE_SSE2)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+    endif (O3D_USE_SSE2)
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-parameter -std=c++14 -fexceptions -Wextra")
