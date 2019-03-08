@@ -27,7 +27,7 @@ namespace mysql {
  * @author Frederic SCHERMA (frederic.scherma@dreamoverflow.org)
  * @date 2013-12-02
  */
-class O3D_API MySql
+class O3D_PGSQL_API MySql
 {
 public:
 
@@ -56,9 +56,10 @@ public:
 	//! Connect to a database
     virtual Bool connect(
         const String &host,
-		const String &database,
-		const String &login = "",
-		const String &password = "",
+        o3d::UInt32 port,
+        const String &database,
+        const String &user = "",
+        const String &password = "",
         Bool keepPassord = True);
 
 	//! Disconnect from the database server

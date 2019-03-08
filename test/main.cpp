@@ -33,8 +33,7 @@ static Int32 main()
 
 	std::cout << "Connecting to the MySql db..." << std::endl;
 
-	if (!mysql.connect("localhost","o3dtest","o3dtest","o3dtest"))
-	{
+    if (!mysql.connect("localhost", 3306, "o3dtest", "o3dtest", "o3dtest")) {
 		std::cout << "Unable to connect to the DB" << std::endl;
 		return -1;
 	}
@@ -49,8 +48,7 @@ static Int32 main()
     query->execute();
 
     std::cout << "Result(s) for UId = 2 :" << std::endl;
-    while (query->fetch())
-    {
+    while (query->fetch()) {
         std::cout << "String= " << query->getOut("Login").asCString().getData() << std::endl;
         std::cout << "BlobSize= " << (String() << query->getOut("PlayersId"/*bl*/).asArrayUInt8().getSize()).getData() << " Data= ";
         for (int i = 0; i < query->getOut("PlayersId").asArrayUInt8().getSize(); ++i)
@@ -64,12 +62,10 @@ static Int32 main()
     query->execute();
 
     std::cout << "Result(s) for UId = 3 :" << std::endl;
-    while (query->fetch())
-    {
+    while (query->fetch()) {
         std::cout << "String= " << query->getOut("Login").asCString().getData() << std::endl;
         std::cout << "BlobSize= " << (String() << query->getOut("PlayersId"/*bl*/).asArrayUInt8().getSize()).getData() << " Data= ";
-        for (int i = 0; i < query->getOut("PlayersId").asArrayUInt8().getSize(); ++i)
-        {
+        for (int i = 0; i < query->getOut("PlayersId").asArrayUInt8().getSize(); ++i) {
             std::cout << query->getOut("PlayersId").asArrayUInt8().get(i);
         }
         std::cout << std::endl;
@@ -82,8 +78,7 @@ static Int32 main()
     query2->execute();
 
     std::cout << "Result(s) for Login = test :" << std::endl;
-    while (query2->fetch())
-    {
+    while (query2->fetch()) {
         std::cout << "UId= " << query2->getOut("UId").asUInt32() << std::endl;
     }
 
@@ -91,8 +86,7 @@ static Int32 main()
     query2->execute();
 
     std::cout << "Result(s) for Login = test0 :" << std::endl;
-    while (query2->fetch())
-    {
+    while (query2->fetch()) {
         std::cout << "UId= " << query2->getOut("UId").asUInt32() << std::endl;
     }
 

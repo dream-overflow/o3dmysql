@@ -25,8 +25,9 @@ MySqlDb::MySqlDb() :
     Database(),
     m_pDB(nullptr)
 {
-    if (!ms_mySqlLibState)
+    if (!ms_mySqlLibState) {
         O3D_ERROR(E_InvalidPrecondition("MySql::init() must be called before"));
+    }
 
     ++ms_mySqlLibRefCount;
 }
@@ -40,27 +41,28 @@ MySqlDb::~MySqlDb()
 // Connect to a database
 Bool MySqlDb::connect(
         const String &host,
+        UInt32 port,
         const String &database,
-        const String &login,
+        const String &user,
         const String &password,
         Bool keepPassord)
 {
-    UInt16 port = 3306; // default port
     Int32 pos;
 
-    m_Server = host;
-	m_Database = database;
-	m_Login = login;
+    if (!port) {
+        port = 3306;  // default is not
+    }
 
-	if (keepPassord)
-	{
-		m_Password = password;
+    m_host = host;
+    m_database = database;
+    m_user = user;
+
+    if (keepPassord) {
+        m_password = password;
 	}
 
-    if ((pos = host.find(':')) != -1)
-	{
-		m_Server.truncate(pos);
-
+    if ((pos = host.find(':')) != -1) {
+        m_host.truncate(pos);
         port = host.sub(pos+1).toUInt32();
     }
 
@@ -69,21 +71,20 @@ Bool MySqlDb::connect(
 
     if (!mysql_real_connect(
                 m_pDB,
-                m_Server.toUtf8().getData(),
-                m_Login.toUtf8().getData(),
-                m_Password.toUtf8().getData(),
-                m_Database.toUtf8().getData(),
-                port,
+                m_host.toUtf8().getData(),
+                m_user.toUtf8().getData(),
+                m_password.toUtf8().getData(),
+                m_database.toUtf8().getData(),
+                static_cast<UInt16>(port),
                 NULL,
-                0)/*CLIENT_MULTI_STATEMENTS)*/)
-    {
+                0)/*CLIENT_MULTI_STATEMENTS)*/) {
         //unsigned int erro = mysql_errno(m_pDB);
         O3D_ERROR(E_MySqlError(mysql_error(m_pDB)));
     }
 
 	O3D_MESSAGE("Successfuly connected to the MySql database");
 
-    m_IsConnected = True;
+    m_isConnected = True;
 
     return True;
 }
@@ -91,11 +92,11 @@ Bool MySqlDb::connect(
 // Disconnect from the database server
 void MySqlDb::disconnect()
 {
-    if (m_IsConnected)
-        m_IsConnected = False;
+    if (m_isConnected) {
+        m_isConnected = False;
+    }
 
-    if (m_pDB)
-    {
+    if (m_pDB) {
         mysql_close(m_pDB);
         m_pDB = nullptr;
     }
@@ -104,8 +105,9 @@ void MySqlDb::disconnect()
 // Try to maintain the connection established
 void MySqlDb::pingConnection()
 {
-    if (m_pDB)
+    if (m_pDB) {
 		mysql_ping(m_pDB);
+    }
 }
 
 // Instanciate a new DbQuery object
@@ -117,23 +119,22 @@ DbQuery* MySqlDb::newDbQuery(const String &name, const CString &query)
 // Virtual destructor
 MySqlQuery::~MySqlQuery()
 {
-    for (Int32 i = 0; i < m_inputs.getSize(); ++i)
-    {
+    for (Int32 i = 0; i < m_inputs.getSize(); ++i) {
         deletePtr(m_inputs[i]);
     }
 
-    for (Int32 i = 0; i < m_outputs.getSize(); ++i)
-    {
+    for (Int32 i = 0; i < m_outputs.getSize(); ++i) {
         deletePtr(m_outputs[i]);
     }
 
-	if (m_stmt)
-    {
-        if (m_prepareMetaResult)
+    if (m_stmt) {
+        if (m_prepareMetaResult) {
             mysql_free_result(m_prepareMetaResult);
+        }
 
-        //if (m_prepareMetaParam)
+        //if (m_prepareMetaParam) {
         //    mysql_free_result(m_prepareMetaParam);
+        // }
 
 		mysql_stmt_close(m_stmt);
     }
@@ -141,20 +142,23 @@ MySqlQuery::~MySqlQuery()
 
 void MySqlQuery::setArrayUInt8(UInt32 attr, const ArrayUInt8 &v)
 {
-    if (attr >= m_numParam)
+    if (attr >= m_numParam) {
         O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
 
-    if (m_inputs[attr])
+    if (m_inputs[attr]) {
         deletePtr(m_inputs[attr]);
+    }
 
-    if (v.getSize() < (1 << 8))
+    if (v.getSize() < (1 << 8)) {
         m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_ARRAY_UINT8, DbVariable::TINY_ARRAY, (UInt8*)&v);
-    else if (v.getSize() < (1 << 16))
+    } else if (v.getSize() < (1 << 16)) {
         m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_ARRAY_UINT8, DbVariable::ARRAY, (UInt8*)&v);
-    else if (v.getSize() < (1 << 24))
+    } else if (v.getSize() < (1 << 24)) {
         m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_ARRAY_UINT8, DbVariable::MEDIUM_ARRAY, (UInt8*)&v);
-    else
+    } else {
         m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_ARRAY_UINT8, DbVariable::LONG_ARRAY, (UInt8*)&v);
+    }
 
     DbVariable &var = *m_inputs[attr];
 
@@ -179,20 +183,23 @@ void MySqlQuery::setArrayUInt8(UInt32 attr, const ArrayUInt8 &v)
 
 void MySqlQuery::setSmartArrayUInt8(UInt32 attr, const SmartArrayUInt8 &v)
 {
-    if (attr >= m_numParam)
+    if (attr >= m_numParam) {
         O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
 
-    if (m_inputs[attr])
+    if (m_inputs[attr]) {
         deletePtr(m_inputs[attr]);
+    }
 
-    if (v.getSizeInBytes() < (1 << 8))
+    if (v.getSizeInBytes() < (1 << 8)) {
         m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_SMART_ARRAY_UINT8, DbVariable::TINY_ARRAY, (UInt8*)&v);
-    else if (v.getSizeInBytes() < (1 << 16))
+    } else if (v.getSizeInBytes() < (1 << 16)) {
         m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_SMART_ARRAY_UINT8, DbVariable::ARRAY, (UInt8*)&v);
-    else if (v.getSizeInBytes() < (1 << 24))
+    } else if (v.getSizeInBytes() < (1 << 24)) {
         m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_SMART_ARRAY_UINT8, DbVariable::MEDIUM_ARRAY, (UInt8*)&v);
-    else
+    } else {
         m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_SMART_ARRAY_UINT8, DbVariable::LONG_ARRAY, (UInt8*)&v);
+    }
 
     DbVariable &var = *m_inputs[attr];
 
@@ -222,11 +229,13 @@ void MySqlQuery::setInStream(UInt32 attr, const InStream &v)
 
 void MySqlQuery::setBool(UInt32 attr, Bool v)
 {
-    if (attr >= m_numParam)
+    if (attr >= m_numParam) {
         O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
 
-    if (m_inputs[attr])
+    if (m_inputs[attr]) {
         deletePtr(m_inputs[attr]);
+    }
 
     m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_BOOL, DbVariable::BOOLEAN, (UInt8*)&v);
     DbVariable &var = *m_inputs[attr];
@@ -252,11 +261,13 @@ void MySqlQuery::setBool(UInt32 attr, Bool v)
 
 void MySqlQuery::setInt32(UInt32 attr, Int32 v)
 {
-    if (attr >= m_numParam)
+    if (attr >= m_numParam) {
         O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
 
-    if (m_inputs[attr])
+    if (m_inputs[attr]) {
         deletePtr(m_inputs[attr]);
+    }
 
     m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_INT32, DbVariable::INT32, (UInt8*)&v);
     DbVariable &var = *m_inputs[attr];
@@ -283,11 +294,13 @@ void MySqlQuery::setInt32(UInt32 attr, Int32 v)
 
 void MySqlQuery::setUInt32(UInt32 attr, UInt32 v)
 {
-    if (attr >= m_numParam)
+    if (attr >= m_numParam) {
         O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
 
-    if (m_inputs[attr])
+    if (m_inputs[attr]) {
         deletePtr(m_inputs[attr]);
+    }
 
     m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_INT32, DbVariable::UINT32, (UInt8*)&v);
     DbVariable &var = *m_inputs[attr];
@@ -315,11 +328,13 @@ void MySqlQuery::setUInt32(UInt32 attr, UInt32 v)
 
 void MySqlQuery::setCString(UInt32 attr, const CString &v)
 {
-    if (attr >= m_numParam)
+    if (attr >= m_numParam) {
         O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
 
-    if (m_inputs[attr])
+    if (m_inputs[attr]) {
         deletePtr(m_inputs[attr]);
+    }
 
     m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_CSTRING, DbVariable::VARCHAR, (UInt8*)&v);
     DbVariable &var = *m_inputs[attr];
@@ -345,11 +360,13 @@ void MySqlQuery::setCString(UInt32 attr, const CString &v)
 
 void MySqlQuery::setDate(UInt32 attr, const Date &v)
 {
-    if (attr >= m_numParam)
+    if (attr >= m_numParam) {
         O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
 
-    if (m_inputs[attr])
+    if (m_inputs[attr]) {
         deletePtr(m_inputs[attr]);
+    }
 
     m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_DATE, DbVariable::TIMESTAMP, (UInt8*)&v);
     DbVariable &var = *m_inputs[attr];
@@ -386,11 +403,13 @@ void MySqlQuery::setDate(UInt32 attr, const Date &v)
 
 void MySqlQuery::setTimestamp(UInt32 attr, const DateTime &v)
 {
-    if (attr >= m_numParam)
+    if (attr >= m_numParam) {
         O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
 
-    if (m_inputs[attr])
-        deletePtr(m_inputs[attr]);
+    if (m_inputs[attr]) {
+        deletePtr(m_inputs[attr]);   
+    }
 
     m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_DATETIME, DbVariable::TIMESTAMP, (UInt8*)&v);
     DbVariable &var = *m_inputs[attr];
@@ -428,41 +447,42 @@ void MySqlQuery::setTimestamp(UInt32 attr, const DateTime &v)
 UInt32 MySqlQuery::getOutAttr(const CString &name)
 {
     auto it = m_outputNames.find(name);
-    if (it != m_outputNames.end())
+    if (it != m_outputNames.end()) {
         return it->second;
-    else
+    } else {
         O3D_ERROR(E_InvalidParameter("Uknown output attribute name"));
+    }
 }
 
 const DbVariable &MySqlQuery::getOut(const CString &name) const
 {
     auto it = m_outputNames.find(name);
-    if (it != m_outputNames.end())
+    if (it != m_outputNames.end()) {
         return *m_outputs[it->second];
-    else
+    } else {
         O3D_ERROR(E_InvalidParameter("Uknown output attribute name"));
+    }
 }
 
 const DbVariable &MySqlQuery::getOut(UInt32 attr) const
 {
-    if (attr < (UInt32)m_outputs.getSize())
+    if (attr < (UInt32)m_outputs.getSize()) {
         return *m_outputs[attr];
-    else
+    } else {
         O3D_ERROR(E_IndexOutOfRange("Output attribute is out of range"));
+    }
 }
 
 // Prepare the query. Can do nothing if not preparation is needed
 void MySqlQuery::prepareQuery()
 {
     O3D_ASSERT(m_pDB != nullptr);
-	if (m_pDB)
-	{
+    if (m_pDB) {
 		m_stmt = mysql_stmt_init(m_pDB);
         O3D_ASSERT(m_stmt != nullptr);
 
         int result = mysql_stmt_prepare(m_stmt, m_query.getData(), (unsigned long)m_query.length());
-		if (result != 0)
-        {
+        if (result != 0) {
             String err = mysql_stmt_error(m_stmt);
 
             mysql_stmt_close(m_stmt);
@@ -473,21 +493,20 @@ void MySqlQuery::prepareQuery()
 
         // inputs
         m_numParam = mysql_stmt_param_count(m_stmt);
-        for (UInt32 i = 0; i < m_numParam; ++i)
-        {
+        for (UInt32 i = 0; i < m_numParam; ++i) {
             memset(&m_param_bind[i], 0, sizeof(MYSQL_BIND));
         }
 
 //        m_prepareMetaParam = mysql_stmt_param_metadata(m_stmt);
-//        if (!m_prepareMetaParam)
+//        if (!m_prepareMetaParam) {
 //            O3D_ERROR(E_MySqlError(mysql_stmt_error(m_stmt)));
+//        }
 
 //        mysql_field_seek(m_prepareMetaParam, 0);
 
           MYSQL_FIELD *field;
           int id = 0;
-//        while ((field = mysql_fetch_field(m_prepareMetaParam)) != nullptr)
-//        {
+//        while ((field = mysql_fetch_field(m_prepareMetaParam)) != nullptr) {
 //            memset(&m_param_bind[id], 0, sizeof(MYSQL_BIND));
 
 //            m_param_length[id] = 0/*TODO*/;
@@ -504,8 +523,7 @@ void MySqlQuery::prepareQuery()
 
         // outputs
         m_prepareMetaResult = mysql_stmt_result_metadata(m_stmt);
-        if (m_prepareMetaResult)
-        {
+        if (m_prepareMetaResult) {
             mysql_field_seek(m_prepareMetaResult, 0);
 
             UInt32 maxSize;
@@ -513,8 +531,7 @@ void MySqlQuery::prepareQuery()
             DbVariable::VarType varType;
 
             id = 0;
-            while ((field = mysql_fetch_field(m_prepareMetaResult)) != nullptr)
-            {
+            while ((field = mysql_fetch_field(m_prepareMetaResult)) != nullptr) {
                 memset(&m_result_bind[id], 0, sizeof(MYSQL_BIND));
 
                 unmapType(field->type, maxSize, intType, varType);
@@ -545,10 +562,8 @@ void MySqlQuery::prepareQuery()
 // Unbind the current bound DbAttribute
 void MySqlQuery::unbind()
 {
-    if (m_stmt)
-    {
-        for (Int32 i = 0; i < m_inputs.getSize(); ++i)
-        {
+    if (m_stmt) {
+        for (Int32 i = 0; i < m_inputs.getSize(); ++i) {
             deletePtr(m_inputs[i]);
         }
 
@@ -580,28 +595,30 @@ void MySqlQuery::execute()
 {
     O3D_ASSERT(m_stmt != nullptr);
 
-    if (m_stmt)
-	{
+    if (m_stmt) {
         m_numRow = 0;
         m_currRow = 0;
 
         // bind if necessary
-        if (m_needBind)
-        {
-            if (mysql_stmt_bind_param(m_stmt, &m_param_bind[0]) != 0)
+        if (m_needBind) {
+            if (mysql_stmt_bind_param(m_stmt, &m_param_bind[0]) != 0) {
                 O3D_ERROR(E_MySqlError(mysql_stmt_error(m_stmt)));
+            }
 
             m_needBind = False;
         }
 
-        if (mysql_stmt_execute(m_stmt) != 0)
+        if (mysql_stmt_execute(m_stmt) != 0) {
             O3D_ERROR(E_MySqlError(mysql_stmt_error(m_stmt)));
+        }
 
-        if (mysql_stmt_bind_result(m_stmt,&m_result_bind[0]) != 0)
+        if (mysql_stmt_bind_result(m_stmt,&m_result_bind[0]) != 0) {
             O3D_ERROR(E_MySqlError(mysql_stmt_error(m_stmt)));
+        }
 
-        if (mysql_stmt_store_result(m_stmt) != 0)
+        if (mysql_stmt_store_result(m_stmt) != 0) {
             O3D_ERROR(E_MySqlError(mysql_stmt_error(m_stmt)));
+        }
 
         m_numRow = mysql_stmt_num_rows(m_stmt);
     }
@@ -611,22 +628,22 @@ void MySqlQuery::update()
 {
     O3D_ASSERT(m_stmt != nullptr);
 
-    if (m_stmt)
-    {
+    if (m_stmt) {
         m_numRow = 0;
         m_currRow = 0;
 
         // bind if necessary
-        if (m_needBind)
-        {
-            if (mysql_stmt_bind_param(m_stmt, &m_param_bind[0]) != 0)
+        if (m_needBind) {
+            if (mysql_stmt_bind_param(m_stmt, &m_param_bind[0]) != 0) {
                 O3D_ERROR(E_MySqlError(mysql_stmt_error(m_stmt)));
+            }
 
             m_needBind = False;
         }
 
-        if (mysql_stmt_execute(m_stmt) != 0)
+        if (mysql_stmt_execute(m_stmt) != 0) {
             O3D_ERROR(E_MySqlError(mysql_stmt_error(m_stmt)));
+        }
 
         m_numRow = mysql_stmt_affected_rows(m_stmt);
     }
@@ -640,8 +657,7 @@ UInt32 MySqlQuery::getNumRows()
 UInt64 MySqlQuery::getGeneratedKey() const
 {
     O3D_ASSERT(m_stmt != nullptr);
-    if (m_stmt)
-    {
+    if (m_stmt) {
         UInt64 id = mysql_stmt_insert_id(m_stmt);
         return id;
     }
@@ -653,29 +669,28 @@ UInt64 MySqlQuery::getGeneratedKey() const
 Bool MySqlQuery::fetch()
 {
     O3D_ASSERT(m_stmt != nullptr);
-    if (m_stmt)
-    {
+    if (m_stmt) {
         int res = mysql_stmt_fetch(m_stmt);
 
-        if (res == MYSQL_NO_DATA)
+        if (res == MYSQL_NO_DATA) {
             return False;
-        else if (res == MYSQL_DATA_TRUNCATED)
+        } else if (res == MYSQL_DATA_TRUNCATED) {
             O3D_WARNING("MYSQL_DATA_TRUNCATED");
-        else if (res != 0)
+        } else if (res != 0) {
             O3D_ERROR(E_MySqlError(mysql_stmt_error(m_stmt)));
+        }
 
 		// validate arrays and strings results
         UInt32 co = m_outputs.getSize();
-        for (size_t i = 0; i < co; ++i)
-		{
+        for (size_t i = 0; i < co; ++i) {
             DbVariable &var = *m_outputs[i];
 
-            if (var.isNull())
+            if (var.isNull()) {
                 continue;
+            }
 
             // string
-            if (var.getIntType() == DbVariable::IT_ARRAY_CHAR)
-			{
+            if (var.getIntType() == DbVariable::IT_ARRAY_CHAR) {
                 ArrayChar *array = (ArrayChar*)var.getObject();
 
                 // add a terminal zero
@@ -683,14 +698,12 @@ Bool MySqlQuery::fetch()
                 (*array)[array->getSize()-1] = 0;
 			}
             // array
-            else if (var.getIntType() == DbVariable::IT_ARRAY_UINT8)
-			{
+            else if (var.getIntType() == DbVariable::IT_ARRAY_UINT8) {
                 ArrayUInt8 *array = (ArrayUInt8*)var.getObject();
                 array->setSize(var.getLength());
 			}
             // date
-            else if (var.getIntType() == DbVariable::IT_DATE)
-            {
+            else if (var.getIntType() == DbVariable::IT_DATE) {
                 Date *date = (Date*)var.getObject();
                 MYSQL_TIME *mysqlTime = (MYSQL_TIME*)var.getObjectPtr();
                 date->day = Day(mysqlTime->day - 1);
@@ -698,8 +711,7 @@ Bool MySqlQuery::fetch()
                 date->year = mysqlTime->year;
             }
             // datetime
-            else if (var.getIntType() == DbVariable::IT_DATETIME)
-            {
+            else if (var.getIntType() == DbVariable::IT_DATETIME) {
                 DateTime *datetime = (DateTime*)var.getObject();
                 MYSQL_TIME *mysqlTime = (MYSQL_TIME*)var.getObjectPtr();
                 datetime->day = Day(mysqlTime->day - 1);
@@ -720,19 +732,20 @@ Bool MySqlQuery::fetch()
 
 UInt32 MySqlQuery::tellRow()
 {
-    if (m_stmt)
+    if (m_stmt) {
         return m_currRow;
-    else
+    } else {
         return 0;
+    }
 }
 
 void MySqlQuery::seekRow(UInt32 row)
 {
-    if (row >= m_numRow)
+    if (row >= m_numRow) {
         O3D_ERROR(E_IndexOutOfRange("Row number"));
+    }
 
-    if (m_stmt)
-    {
+    if (m_stmt) {
         mysql_stmt_data_seek(m_stmt, row);
         m_currRow = row;
     }
@@ -740,8 +753,7 @@ void MySqlQuery::seekRow(UInt32 row)
 
 void MySql::init()
 {
-    if (!ms_mySqlLibState)
-    {
+    if (!ms_mySqlLibState) {
         mysql_server_init(0, nullptr, nullptr);
 
         Application::registerObject("o3d::MySql", nullptr);
@@ -751,10 +763,10 @@ void MySql::init()
 
 void MySql::quit()
 {
-    if (ms_mySqlLibState)
-    {
-        if (ms_mySqlLibRefCount != 0)
+    if (ms_mySqlLibState) {
+        if (ms_mySqlLibRefCount != 0) {
             O3D_ERROR(E_InvalidOperation("Trying to quit mysql library but some database still exists"));
+        }
 
         mysql_server_end();
 
@@ -768,8 +780,7 @@ void MySqlQuery::mapType(
         enum_field_types &mysqltype,
         unsigned long &mysqlsize)
 {
-    switch (type)
-    {
+    switch (type) {
     case DbVariable::BOOLEAN:
         mysqltype = MYSQL_TYPE_TINY;
         mysqlsize = 1;
@@ -859,8 +870,7 @@ void MySqlQuery::unmapType(
         DbVariable::IntType &intType,
         DbVariable::VarType &varType)
 {
-    switch (mysqltype)
-    {
+    switch (mysqltype) {
     case MYSQL_TYPE_TINY:
         intType = DbVariable::IT_INT8;
         varType = DbVariable::INT8;
