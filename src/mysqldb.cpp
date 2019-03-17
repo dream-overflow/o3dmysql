@@ -706,18 +706,18 @@ Bool MySqlQuery::fetch()
             else if (var.getIntType() == DbVariable::IT_DATE) {
                 Date *date = (Date*)var.getObject();
                 MYSQL_TIME *mysqlTime = (MYSQL_TIME*)var.getObjectPtr();
-                date->day = Day(mysqlTime->day - 1);
-                date->month = Month(mysqlTime->month - 1);
+                date->mday = mysqlTime->day;
+                date->month = mysqlTime->month;
                 date->year = mysqlTime->year;
             }
             // datetime
             else if (var.getIntType() == DbVariable::IT_DATETIME) {
                 DateTime *datetime = (DateTime*)var.getObject();
                 MYSQL_TIME *mysqlTime = (MYSQL_TIME*)var.getObjectPtr();
-                datetime->day = Day(mysqlTime->day - 1);
+                datetime->mday = mysqlTime->day;
                 datetime->hour = mysqlTime->hour;
                 datetime->minute = mysqlTime->minute;
-                datetime->month = Month(mysqlTime->month - 1);
+                datetime->month = mysqlTime->month;
                 datetime->second = mysqlTime->second;
                 datetime->year = mysqlTime->year;
             }

@@ -27,7 +27,7 @@ namespace mysql {
  * @author Frederic SCHERMA (frederic.scherma@dreamoverflow.org)
  * @date 2013-12-02
  */
-class O3D_PGSQL_API MySql
+class O3D_MYSQL_API MySql
 {
 public:
 
