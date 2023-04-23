@@ -545,8 +545,8 @@ void MySqlQuery::prepareQuery()
                 m_result_bind[id].buffer_type = field->type;
                 m_result_bind[id].buffer_length = var.getObjectSize();
 
-                m_result_bind[id].is_null = (my_bool*)var.getIsNullPtr();
-                m_result_bind[id].error = (my_bool*)var.getErrorPtr();
+                m_result_bind[id].is_null = (bool*)var.getIsNullPtr();
+                m_result_bind[id].error = (bool*)var.getErrorPtr();
 
                 var.setLength(var.getObjectSize());
                 m_result_bind[id].length = (unsigned long*)var.getLengthPtr();
