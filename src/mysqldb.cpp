@@ -758,6 +758,7 @@ void MySql::init()
 
         Application::registerObject("o3d::MySql", nullptr);
         ms_mySqlLibState = True;
+        ms_mySqlLibRefCount = 0;
     }
 }
 

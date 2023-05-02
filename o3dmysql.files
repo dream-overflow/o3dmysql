@@ -5,4 +5,6 @@ test/main.cpp
 include/o3d/mysql/mysqlexception.h
 include/o3d/mysql/mysql.h
 include/o3d/mysql/mysqldbvariable.h
+src/CMakeLists.txt
 src/mysqldbvariable.cpp
+test/CMakeLists.txt

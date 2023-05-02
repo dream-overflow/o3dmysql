@@ -29,19 +29,23 @@ static Int32 main()
 {
     MySql::init();
 
-	MySqlDb mysql;
+    MySqlDb *mysql = new MySqlDb();
 
 	std::cout << "Connecting to the MySql db..." << std::endl;
 
-    if (!mysql.connect("localhost", 3306, "o3dtest", "o3dtest", "o3dtest")) {
+    if (!mysql->connect("localhost", 3306, "o3dtest", "o3dtest", "o3dtest")) {
 		std::cout << "Unable to connect to the DB" << std::endl;
+
+        o3d::deletePtr(mysql);
+        MySql::quit();
+
 		return -1;
 	}
 
 	std::cout << "Successfully connected:" << std::endl;
 
 	std::cout << "Create an STMT Request..." << std::endl;
-    DbQuery *query = mysql.registerQuery("test","SELECT Login, PlayersId FROM user WHERE UId = ?");
+    DbQuery *query = mysql->registerQuery("test","SELECT Login, PlayersId FROM user WHERE UId = ?");
 
     query->setInt32(0, 2);
 
@@ -72,7 +76,7 @@ static Int32 main()
     }
 
     std::cout << "Create another STMT Request..." << std::endl;
-    DbQuery *query2 = mysql.registerQuery("test2","SELECT UId FROM test2 WHERE Login = ?");
+    DbQuery *query2 = mysql->registerQuery("test2","SELECT UId FROM test2 WHERE Login = ?");
 
     query2->setCString(0, "test");
     query2->execute();
@@ -90,12 +94,24 @@ static Int32 main()
         std::cout << "UId= " << query2->getOut("UId").asUInt32() << std::endl;
     }
 
-	mysql.disconnect();
+    mysql->disconnect();
+    o3d::deletePtr(mysql);
 
     MySql::quit();
     return 0;
 }
 };
 
+class MyAppSettings : public AppSettings
+{
+public:
+
+    MyAppSettings() : AppSettings()
+    {
+        useDisplay = false;
+        clearLog = false;
+    }
+};
+
 // We Call our application in console mode
-O3D_CONSOLE_MAIN(MySqlTest, O3D_DEFAULT_CLASS_SETTINGS)
+O3D_CONSOLE_MAIN(MySqlTest, MyAppSettings)
