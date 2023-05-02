@@ -450,7 +450,7 @@ UInt32 MySqlQuery::getOutAttr(const CString &name)
     if (it != m_outputNames.end()) {
         return it->second;
     } else {
-        O3D_ERROR(E_InvalidParameter("Uknown output attribute name"));
+        O3D_ERROR(E_InvalidParameter(o3d::String("Unknown output attribute name ") + name));
     }
 }
 
@@ -460,7 +460,7 @@ const DbVariable &MySqlQuery::getOut(const CString &name) const
     if (it != m_outputNames.end()) {
         return *m_outputs[it->second];
     } else {
-        O3D_ERROR(E_InvalidParameter("Uknown output attribute name"));
+        O3D_ERROR(E_InvalidParameter(o3d::String("Unknown output attribute name ") + name));
     }
 }
 
