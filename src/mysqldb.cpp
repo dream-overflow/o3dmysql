@@ -326,6 +326,72 @@ void MySqlQuery::setUInt32(UInt32 attr, UInt32 v)
     m_needBind = True;
 }
 
+void MySqlQuery::setFloat(UInt32 attr, Float v)
+{
+    if (attr >= m_numParam) {
+        O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
+
+    if (m_inputs[attr]) {
+        deletePtr(m_inputs[attr]);
+    }
+
+    m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_FLOAT, DbVariable::FLOAT32, (UInt8*)&v);
+    DbVariable &var = *m_inputs[attr];
+
+    enum_field_types dbtype = (enum_field_types)0;
+    unsigned long dbsize = 0;
+
+    mapType(var.getType(), dbtype, dbsize);
+
+    memset(&m_param_bind[attr], 0, sizeof(MYSQL_BIND));
+
+    m_param_bind[attr].buffer_type = (enum_field_types)dbtype;
+    m_param_bind[attr].buffer = (void*)var.getObjectPtr();
+    m_param_bind[attr].buffer_length = var.getObjectSize();
+
+    //m_param_bind[attr].is_null_value = False; @see if we support null value
+    m_param_bind[attr].is_null = 0;
+
+    var.setLength(dbsize);
+    m_param_bind[attr].length = (unsigned long*)var.getLengthPtr();
+
+    m_needBind = True;
+}
+
+void MySqlQuery::setDouble(UInt32 attr, Double v)
+{
+    if (attr >= m_numParam) {
+        O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
+
+    if (m_inputs[attr]) {
+        deletePtr(m_inputs[attr]);
+    }
+
+    m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_DOUBLE, DbVariable::FLOAT64, (UInt8*)&v);
+    DbVariable &var = *m_inputs[attr];
+
+    enum_field_types dbtype = (enum_field_types)0;
+    unsigned long dbsize = 0;
+
+    mapType(var.getType(), dbtype, dbsize);
+
+    memset(&m_param_bind[attr], 0, sizeof(MYSQL_BIND));
+
+    m_param_bind[attr].buffer_type = (enum_field_types)dbtype;
+    m_param_bind[attr].buffer = (void*)var.getObjectPtr();
+    m_param_bind[attr].buffer_length = var.getObjectSize();
+
+    //m_param_bind[attr].is_null_value = False; @see if we support null value
+    m_param_bind[attr].is_null = 0;
+
+    var.setLength(dbsize);
+    m_param_bind[attr].length = (unsigned long*)var.getLengthPtr();
+
+    m_needBind = True;
+}
+
 void MySqlQuery::setCString(UInt32 attr, const CString &v)
 {
     if (attr >= m_numParam) {
