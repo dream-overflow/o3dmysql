@@ -326,6 +326,73 @@ void MySqlQuery::setUInt32(UInt32 attr, UInt32 v)
     m_needBind = True;
 }
 
+void MySqlQuery::setInt64(UInt32 attr, Int64 v)
+{
+    if (attr >= m_numParam) {
+        O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
+
+    if (m_inputs[attr]) {
+        deletePtr(m_inputs[attr]);
+    }
+
+    m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_INT64, DbVariable::INT64, (UInt8*)&v);
+    DbVariable &var = *m_inputs[attr];
+
+    enum_field_types dbtype = (enum_field_types)0;
+    unsigned long dbsize = 0;
+
+    mapType(var.getType(), dbtype, dbsize);
+
+    memset(&m_param_bind[attr], 0, sizeof(MYSQL_BIND));
+
+    m_param_bind[attr].buffer_type = (enum_field_types)dbtype;
+    m_param_bind[attr].buffer = (void*)var.getObjectPtr();
+    m_param_bind[attr].buffer_length = var.getObjectSize();
+
+    //m_param_bind[attr].is_null_value = False; @see if we support null value
+    m_param_bind[attr].is_null = 0;
+
+    var.setLength(dbsize);
+    m_param_bind[attr].length = (unsigned long*)var.getLengthPtr();
+
+    m_needBind = True;
+}
+
+void MySqlQuery::setUInt64(UInt32 attr, UInt64 v)
+{
+    if (attr >= m_numParam) {
+        O3D_ERROR(E_IndexOutOfRange("Input attribute id"));
+    }
+
+    if (m_inputs[attr]) {
+        deletePtr(m_inputs[attr]);
+    }
+
+    m_inputs[attr] = new MySqlDbVariable(DbVariable::IT_INT64, DbVariable::UINT64, (UInt8*)&v);
+    DbVariable &var = *m_inputs[attr];
+
+    enum_field_types dbtype = (enum_field_types)0;
+    unsigned long dbsize = 0;
+
+    mapType(var.getType(), dbtype, dbsize);
+
+    memset(&m_param_bind[attr], 0, sizeof(MYSQL_BIND));
+
+    m_param_bind[attr].buffer_type = (enum_field_types)dbtype;
+
+    m_param_bind[attr].buffer = (void*)var.getObjectPtr();
+    m_param_bind[attr].buffer_length = var.getObjectSize();
+
+    m_param_bind[attr].is_null = 0;
+    m_param_bind[attr].is_unsigned = True;
+
+    var.setLength(dbsize);
+    m_param_bind[attr].length = (unsigned long*)var.getLengthPtr();
+
+    m_needBind = True;
+}
+
 void MySqlQuery::setFloat(UInt32 attr, Float v)
 {
     if (attr >= m_numParam) {
@@ -878,7 +945,10 @@ void MySqlQuery::mapType(
         mysqlsize = 4;
         break;
 
-        //MYSQL_TYPE_LONGLONG
+    case DbVariable::INT64:
+        mysqltype = MYSQL_TYPE_LONGLONG;
+        mysqlsize = 8;
+        break;
 
     case DbVariable::FLOAT32:
         mysqltype = MYSQL_TYPE_FLOAT;
@@ -962,7 +1032,11 @@ void MySqlQuery::unmapType(
         maxSize = 4;
         break;
 
-        //MYSQL_TYPE_LONGLONG
+    case MYSQL_TYPE_LONGLONG:
+        intType = DbVariable::IT_INT64;
+        varType = DbVariable::INT64;
+        maxSize = 8;
+        break;
 
     case MYSQL_TYPE_FLOAT:
         intType = DbVariable::IT_FLOAT;
