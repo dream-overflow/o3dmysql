@@ -82,7 +82,7 @@ Bool MySqlDb::connect(
         O3D_ERROR(E_MySqlError(mysql_error(m_pDB)));
     }
 
-	O3D_MESSAGE("Successfuly connected to the MySql database");
+    // O3D_MESSAGE("Successfully connected to the MySql database");
 
     m_isConnected = True;
 
